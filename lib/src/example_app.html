@@ -35,9 +35,7 @@
                              transitions="slide-from-right"
                              on-tap="{{cyclePages}}">
           <template repeat="{{page in pages}}">
-            <section hash="{{page.path}}" layout vertical center-center>
-              <div>{{page.name}}</div>
-            </section>
+            <section hash="{{page.path}}" layout vertical center-center></section>
           </template>
         </core-animated-pages>
       </div>

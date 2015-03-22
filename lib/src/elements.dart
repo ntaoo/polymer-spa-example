@@ -16,3 +16,10 @@ export 'package:core_elements/core_scaffold.dart';
 export 'package:core_elements/core_toolbar.dart';
 export 'package:core_elements/roboto.dart';
 export 'package:paper_elements/paper_item.dart';
+
+// Page elements
+export 'package:polymer_spa_example/one_page.dart';
+export 'package:polymer_spa_example/two_page.dart';
+export 'package:polymer_spa_example/three_page.dart';
+export 'package:polymer_spa_example/four_page.dart';
+export 'package:polymer_spa_example/five_page.dart';

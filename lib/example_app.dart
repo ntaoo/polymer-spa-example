@@ -16,6 +16,7 @@ class Page {
   final String name;
   final String path;
   final bool isDefault;
+
   const Page(this.name, this.path, {this.isDefault: false});
 
   String toString() => '$name';
@@ -30,15 +31,16 @@ class ExampleApp extends PolymerElement {
 
   /// The list of pages in our app.
   final List<Page> pages = const [
-    const Page('Single', 'one', isDefault: true),
-    const Page('page', 'two'),
-    const Page('app', 'three'),
-    const Page('using', 'four'),
-    const Page('Polymer', 'five'),
+      const Page('Single', 'one', isDefault: true),
+      const Page('page', 'two'),
+      const Page('app', 'three'),
+      const Page('using', 'four'),
+      const Page('Polymer', 'five'),
   ];
 
   /// The path of the current [Page].
   @observable var route;
+  var _previousRoute;
 
   /// The [Router] which is going to control the app.
   final Router router = new Router(useFragment: true);
@@ -47,9 +49,13 @@ class ExampleApp extends PolymerElement {
 
   /// Convenience getters that return the expected types to avoid casts.
   CoreA11yKeys get keys => $['keys'];
+
   CoreScaffold get scaffold => $['scaffold'];
+
   CoreAnimatedPages get corePages => $['pages'];
+
   CoreMenu get menu => $['menu'];
+
   BodyElement get body => document.body;
 
   domReady() {
@@ -65,6 +71,15 @@ class ExampleApp extends PolymerElement {
     int i = 0;
     var keysToAdd = pages.map((page) => ++i);
     keys.keys = '${keys.keys} ${keysToAdd.join(' ')}';
+    handlePageElementsOnRouteTransition();
+  }
+
+  void handlePageElementsOnRouteTransition() {
+    // Following app-router's solution.
+    // https://github.com/erikringsmuth/app-router/blob/master/src/app-router.js#L80
+    corePages.onTransitionEnd.listen((TransitionEvent e) {
+      if (_previousRoute != null) corePages.querySelector('section[hash="$_previousRoute"]').children.clear();
+    });
   }
 
   /// Updates [selectedPage] and the current route whenever the route changes.
@@ -73,14 +88,23 @@ class ExampleApp extends PolymerElement {
     if (route.isEmpty) {
       selectedPage = pages.firstWhere((page) => page.isDefault);
     } else {
+      /// Preserve path for page transition animation.
+      if (selectedPage != null) _previousRoute = selectedPage.path;
       selectedPage = pages.firstWhere((page) => page.path == route);
     }
-    router.go(selectedPage.name, {});
+    router.go(selectedPage.name, {
+    });
   }
 
   /// Updates [route] whenever we enter a new route.
   void enterRoute(RouteEvent e) {
     route = e.path;
+    /// Ensure to clear page element, and add the page element corresponding to route.
+    if (route != null && route != "") {
+      corePages.querySelector('section[hash="$route"]').children
+        ..clear()
+        ..add(new Element.tag("${route}-page"));
+    }
   }
 
   /// Handler for key events.
@@ -98,7 +122,7 @@ class ExampleApp extends PolymerElement {
         return;
       case 'space':
         detail['shift'] ? corePages.selectPrevious(false)
-            : corePages.selectNext(false);
+        : corePages.selectNext(false);
         return;
     }
 
@@ -109,7 +133,8 @@ class ExampleApp extends PolymerElement {
         route = pages[num - 1].path;
       }
       return;
-    } catch(e) {}
+    } catch (e) {
+    }
   }
 
   /// Cycle pages on click.

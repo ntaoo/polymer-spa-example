@@ -11,13 +11,17 @@ import 'package:polymer/polymer.dart';
 import 'package:route_hierarchical/client.dart';
 import 'src/elements.dart';
 
-/// Simple class which maps page names to paths.
+/// Simple class which maps page names and custom tags to paths.
 class Page {
   final String name;
   final String path;
+  final String customTag;
   final bool isDefault;
 
-  const Page(this.name, this.path, {this.isDefault: false});
+  const Page(this.name, this.path, this.customTag, {this.isDefault: false});
+
+  // Consider some conventions. For example, custom tag name is expected to be same as the name...
+  Element create() => new Element.tag("$customTag");
 
   String toString() => '$name';
 }
@@ -31,11 +35,11 @@ class ExampleApp extends PolymerElement {
 
   /// The list of pages in our app.
   final List<Page> pages = const [
-      const Page('Single', 'one', isDefault: true),
-      const Page('page', 'two'),
-      const Page('app', 'three'),
-      const Page('using', 'four'),
-      const Page('Polymer', 'five'),
+    const Page('Single', 'one-page', 'one-page', isDefault: true),
+    const Page('page', 'two-page', 'two-page'),
+    const Page('app', 'three-page', 'three-page'),
+    const Page('using', 'four-page', 'four-page'),
+    const Page('Polymer', 'five-page', 'five-page'),
   ];
 
   /// The path of the current [Page].
@@ -66,19 +70,23 @@ class ExampleApp extends PolymerElement {
           enter: enterRoute);
     }
     router.listen();
-
     // Set up the number keys to send you to pages.
     int i = 0;
     var keysToAdd = pages.map((page) => ++i);
     keys.keys = '${keys.keys} ${keysToAdd.join(' ')}';
+
     handlePageElementsOnRouteTransition();
   }
 
   void handlePageElementsOnRouteTransition() {
+    // Clear previous route's content on the transition end.
     // Following app-router's solution.
     // https://github.com/erikringsmuth/app-router/blob/master/src/app-router.js#L80
+    // TODO: This doesn't work well when another transition starts before a transition ends. Needs another hook.
     corePages.onTransitionEnd.listen((TransitionEvent e) {
-      if (_previousRoute != null) corePages.querySelector('section[hash="$_previousRoute"]').children.clear();
+      if (_previousRoute != null && _previousRoute != route) {
+        corePages.querySelector('section[hash="$_previousRoute"]').children.clear();
+      }
     });
   }
 
@@ -88,7 +96,7 @@ class ExampleApp extends PolymerElement {
     if (route.isEmpty) {
       selectedPage = pages.firstWhere((page) => page.isDefault);
     } else {
-      /// Preserve path for page transition animation.
+      // Preserve path for page transition animation.
       if (selectedPage != null) _previousRoute = selectedPage.path;
       selectedPage = pages.firstWhere((page) => page.path == route);
     }
@@ -99,11 +107,12 @@ class ExampleApp extends PolymerElement {
   /// Updates [route] whenever we enter a new route.
   void enterRoute(RouteEvent e) {
     route = e.path;
-    /// Ensure to clear page element, and add the page element corresponding to route.
+    if (selectedPage == null) selectedPage = pages.firstWhere((page) => page.path == route);
+    // Ensure to clear page element, and add the page element corresponding to route.
     if (route != null && route != "") {
       corePages.querySelector('section[hash="$route"]').children
         ..clear()
-        ..add(new Element.tag("${route}-page"));
+        ..add(selectedPage.create());
     }
   }
 

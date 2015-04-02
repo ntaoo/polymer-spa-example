@@ -80,9 +80,9 @@ class ExampleApp extends PolymerElement {
 
   void handlePageElementsOnRouteTransition() {
     // Clear previous route's content on the transition end.
-    // Following app-router's solution.
-    // https://github.com/erikringsmuth/app-router/blob/master/src/app-router.js#L80
-    // TODO: This doesn't work well when another transition starts before a transition ends. Needs another hook.
+    // Following app-router's idea.
+    // https://github.com/erikringsmuth/app-router/blob/master/src/app-router.js
+    // TODO: This doesn't work well when another transition starts before a transition ends. Needs another tweak.
     corePages.onTransitionEnd.listen((TransitionEvent e) {
       if (_previousRoute != null && _previousRoute != route) {
         corePages.querySelector('section[hash="$_previousRoute"]').children.clear();
